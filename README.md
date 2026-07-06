@@ -10,10 +10,20 @@ This README just gets you running.
 
 ## Run it
 
+**macOS / Linux:**
 ```
 git clone https://github.com/sasistician/evbot-week3-lab.git week3-lab
 cd week3-lab
 ./setup.sh
+```
+
+**Windows:** run this from [Git Bash](https://git-scm.com/download/win)
+(installed alongside Git for Windows — you already have it if you can `git
+clone`) or WSL. Native PowerShell/cmd.exe can't run `setup.sh` directly.
+```
+git clone https://github.com/sasistician/evbot-week3-lab.git week3-lab
+cd week3-lab
+bash setup.sh
 ```
 
 `setup.sh` checks for `uv`, Ollama, and the two required local models, and

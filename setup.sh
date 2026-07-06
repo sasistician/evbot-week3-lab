@@ -3,6 +3,11 @@
 # single reported issue — it never installs anything without showing you
 # the exact command first (except copying .env.example -> .env, which has
 # no secrets in it).
+#
+# Windows: run this from Git Bash (installed alongside Git for Windows,
+# https://git-scm.com/download/win) or WSL — both provide the bash/curl/awk
+# environment this script needs. Native PowerShell/cmd.exe can't run this
+# file directly. Once you're in Git Bash or WSL, run: bash setup.sh
 set -euo pipefail
 
 cd "$(dirname "$0")"
@@ -18,22 +23,25 @@ echo "== EVBot setup =="
 
 # 1. uv
 if ! command -v uv >/dev/null 2>&1; then
-  fail "uv is not installed. Install it, then re-run ./setup.sh:
+  fail "uv is not installed. Install it, then re-run bash setup.sh:
     curl -LsSf https://astral.sh/uv/install.sh | sh"
 fi
 echo "✓ uv found ($(uv --version))"
 
 # 2. ollama
 if ! command -v ollama >/dev/null 2>&1; then
-  fail "Ollama is not installed. Install it from https://ollama.com/download, then re-run ./setup.sh"
+  fail "Ollama is not installed. Install it from https://ollama.com/download, then re-run bash setup.sh"
 fi
 echo "✓ ollama found ($(ollama --version))"
 
 # 3. Ollama server reachable
 OLLAMA_HOST_URL="${OLLAMA_HOST:-http://localhost:11434}"
 if ! curl -fsS "$OLLAMA_HOST_URL/api/tags" >/dev/null 2>&1; then
-  fail "Ollama isn't running at $OLLAMA_HOST_URL. Start it in another terminal, then re-run ./setup.sh:
-    ollama serve"
+  fail "Ollama isn't running at $OLLAMA_HOST_URL. If you installed the Ollama desktop
+    app (macOS/Windows), open it and check it's running in your tray/menu bar. On
+    Linux, or if you installed the CLI only, start it in another terminal:
+    ollama serve
+    Then re-run: bash setup.sh"
 fi
 echo "✓ ollama server reachable at $OLLAMA_HOST_URL"
 
@@ -49,7 +57,7 @@ for model in "$SIMPLE_MODEL" "$COMPLEX_MODEL"; do
   fi
 done
 if [ "${#MISSING_MODELS[@]}" -ne 0 ]; then
-  msg="Missing Ollama model(s): ${MISSING_MODELS[*]}. Pull them, then re-run ./setup.sh:"
+  msg="Missing Ollama model(s): ${MISSING_MODELS[*]}. Pull them, then re-run bash setup.sh:"
   for m in "${MISSING_MODELS[@]}"; do
     msg="$msg
     ollama pull $m"

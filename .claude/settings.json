@@ -6,7 +6,8 @@
       "Edit(/.claude/skills/answer-quality-judge/**)",
       "Bash(gh --version)",
       "Bash(gh auth *)",
-      "Bash(git init *)"
+      "Bash(git init *)",
+      "Bash(git check-ignore *)"
     ],
     "additionalDirectories": [
       "/Users/bilalfarooq/Documents/CC-Projects/course_content"
