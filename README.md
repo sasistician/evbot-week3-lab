@@ -11,7 +11,7 @@ This README just gets you running.
 ## Run it
 
 ```
-git clone <repo-url>
+git clone https://github.com/sasistician/evbot-week3-lab.git week3-lab
 cd week3-lab
 ./setup.sh
 ```
