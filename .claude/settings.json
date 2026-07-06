@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pkill -f \"python -m evbot.app\")",
+      "Bash(curl -sS -o /dev/null -w \"HTTP %{http_code}\\\\n\" http://localhost:7860/)",
+      "Edit(/.claude/skills/answer-quality-judge/**)",
+      "Bash(gh --version)",
+      "Bash(gh auth *)",
+      "Bash(git init *)"
+    ],
+    "additionalDirectories": [
+      "/Users/bilalfarooq/Documents/CC-Projects/course_content"
+    ]
+  }
+}
