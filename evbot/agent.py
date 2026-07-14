@@ -107,7 +107,7 @@ def answer_question(query: str, session_id: str) -> tuple[str, dict[str, Any]]:
     output_result = guardrails.check_output_safety(candidate_answer, context_chunks)
     debug["output_guardrail"] = asdict(output_result)
 
-    if output_result.ungrounded_claims:
+    if output_result.groundedness_failed:
         final_answer = _NOT_GROUNDED_FALLBACK
     elif output_result.pii_detected:
         final_answer = output_result.redacted_answer or candidate_answer

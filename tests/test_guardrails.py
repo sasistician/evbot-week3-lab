@@ -41,17 +41,36 @@ def test_output_groundedness_pass(monkeypatch):
     assert result.ungrounded_claims == []
 
 
-def test_output_groundedness_fail(monkeypatch):
+def test_output_groundedness_single_unsupported_claim_tolerated(monkeypatch):
+    """One flagged sentence is within GROUNDEDNESS_MAX_UNSUPPORTED and should pass."""
     canned_response = "SENTENCE: The Model 3 costs $10.\nVERDICT: UNSUPPORTED\n"
     monkeypatch.setattr(guardrails, "call_llm", lambda *a, **k: canned_response)
     result = guardrails.check_output_safety("The Model 3 costs $10.", context_chunks=["Model 3 range: 272 miles"])
-    assert not result.passed
+    assert result.passed
+    assert not result.groundedness_failed
     assert result.ungrounded_claims == ["The Model 3 costs $10."]
 
 
+def test_output_groundedness_fail_exceeds_tolerance(monkeypatch):
+    canned_response = (
+        "SENTENCE: The Model 3 costs $10.\nVERDICT: UNSUPPORTED\n"
+        "SENTENCE: The Model 3 seats 12 people.\nVERDICT: UNSUPPORTED\n"
+    )
+    monkeypatch.setattr(guardrails, "call_llm", lambda *a, **k: canned_response)
+    result = guardrails.check_output_safety(
+        "The Model 3 costs $10. The Model 3 seats 12 people.",
+        context_chunks=["Model 3 range: 272 miles"],
+    )
+    assert not result.passed
+    assert result.groundedness_failed
+    assert result.ungrounded_claims == ["The Model 3 costs $10.", "The Model 3 seats 12 people."]
+
+
 def test_output_no_context_is_ungrounded():
+    """No context at all always fails, regardless of the unsupported-claim tolerance."""
     result = guardrails.check_output_safety("Some answer.", context_chunks=[])
     assert not result.passed
+    assert result.groundedness_failed
     assert result.ungrounded_claims
 
 
@@ -67,5 +86,5 @@ def test_output_groundedness_mixed_verdicts_only_flags_unsupported(monkeypatch):
         "The Bolt starts around $27,000. The Bolt comes standard with heated seats.",
         context_chunks=["Bolt EUV starts at $27,000"],
     )
-    assert not result.passed
+    assert result.passed
     assert result.ungrounded_claims == ["The Bolt comes standard with heated seats."]

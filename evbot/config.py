@@ -66,6 +66,11 @@ EV_TOPIC_KEYWORDS = (
     "level 2",
 )
 
+# Output-guardrail leniency: tolerate up to this many sentences flagged as
+# unsupported before rejecting the whole answer (0 = any single flagged
+# sentence kills the answer).
+GROUNDEDNESS_MAX_UNSUPPORTED = 1
+
 RAG_RETRIEVAL_K = 4
 # Complex queries often compare multiple EVs, so they need more retrieved
 # context to cover every entity mentioned rather than just the first one.

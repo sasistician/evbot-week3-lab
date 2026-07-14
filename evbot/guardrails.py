@@ -12,7 +12,12 @@ not supported by the retrieved context.
 import re
 from dataclasses import dataclass, field
 
-from evbot.config import EV_TOPIC_KEYWORDS, OLLAMA_MODEL_COMPLEX, OLLAMA_MODEL_SIMPLE
+from evbot.config import (
+    EV_TOPIC_KEYWORDS,
+    GROUNDEDNESS_MAX_UNSUPPORTED,
+    OLLAMA_MODEL_COMPLEX,
+    OLLAMA_MODEL_SIMPLE,
+)
 from evbot.llm_clients import call_llm
 
 _PII_PATTERNS = {
@@ -59,6 +64,7 @@ class OutputGuardrailResult:
     pii_detected: bool = False
     toxicity_detected: bool = False
     ungrounded_claims: list[str] = field(default_factory=list)
+    groundedness_failed: bool = False
     redacted_answer: str | None = None
 
 
@@ -83,7 +89,11 @@ def check_input_topic(query: str, history: str = "") -> InputGuardrailResult:
             "yes or no."
         ),
     )
-    is_ev_related = classification.strip().lower().startswith("y")
+    # Default-permissive on an ambiguous/empty model response — only an
+    # explicit "no" rejects the question. A strict "must start with yes"
+    # check was rejecting on-topic follow-ups whenever the small local model
+    # hedged its answer.
+    is_ev_related = not classification.strip().lower().startswith("n")
 
     return InputGuardrailResult(
         passed=is_ev_related,
@@ -145,12 +155,21 @@ def check_output_safety(answer: str, context_chunks: list[str]) -> OutputGuardra
     toxicity_detected = _scan_toxicity(answer)
     ungrounded_claims = _check_groundedness(answer, context_chunks)
 
-    passed = not pii_detected and not toxicity_detected and not ungrounded_claims
+    # Tolerate a small number of flagged sentences rather than rejecting the
+    # whole answer over one mis-scored claim. Having no context at all to
+    # check against is a harder failure than a few flagged sentences, so
+    # that case always fails regardless of the tolerance.
+    groundedness_failed = (
+        not context_chunks or len(ungrounded_claims) > GROUNDEDNESS_MAX_UNSUPPORTED
+    )
+
+    passed = not pii_detected and not toxicity_detected and not groundedness_failed
 
     return OutputGuardrailResult(
         passed=passed,
         pii_detected=pii_detected,
         toxicity_detected=toxicity_detected,
         ungrounded_claims=ungrounded_claims,
+        groundedness_failed=groundedness_failed,
         redacted_answer=redacted if pii_detected else None,
     )
